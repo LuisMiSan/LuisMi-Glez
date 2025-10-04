@@ -1,0 +1,7 @@
+{
+  "name": "Perfect Prompt AI",
+  "description": "An application that helps users create perfect, detailed, and effective prompts for AI models by leveraging Gemini to refine their initial ideas.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
