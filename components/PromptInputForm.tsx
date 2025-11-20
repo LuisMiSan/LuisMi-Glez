@@ -144,13 +144,18 @@ const SelectField = React.memo<{
   </div>
 ));
 
-// Custom Dropdown for AI Model to ensure styling matches the app (dark mode/neon)
-const CustomModelDropdown: React.FC<{
+// Custom Reusable Dropdown
+interface CustomDropdownProps {
   value: string;
   onChange: (val: string) => void;
-  options: string[];
+  options: readonly string[] | string[];
   label: string;
-}> = ({ value, onChange, options, label }) => {
+  labelClassName?: string;
+  variant?: 'cyan' | 'indigo';
+  placeholder?: string;
+}
+
+const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, options, label, labelClassName, variant = 'cyan', placeholder = "Selecciona una opción..." }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -164,19 +169,39 @@ const CustomModelDropdown: React.FC<{
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Theme Configuration
+  const theme = {
+    cyan: {
+        border: isOpen ? 'border-cyan-400 ring-1 ring-cyan-400/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-cyan-500/50',
+        iconColor: isOpen ? 'text-cyan-400' : 'text-slate-400',
+        selectedBg: 'bg-cyan-900/40',
+        selectedText: 'text-cyan-300'
+    },
+    indigo: {
+        border: isOpen ? 'border-indigo-500 ring-1 ring-indigo-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-indigo-500/50',
+        iconColor: isOpen ? 'text-indigo-400' : 'text-slate-400',
+        selectedBg: 'bg-indigo-900/40',
+        selectedText: 'text-indigo-300'
+    }
+  };
+
+  const currentTheme = theme[variant];
+
   return (
     <div className="mb-6 relative" ref={containerRef}>
-      <label className="block text-sm font-bold text-slate-200 mb-2 tracking-wide">
+      <label className={labelClassName || "block text-sm font-bold text-slate-200 mb-2 tracking-wide"}>
         {label}
       </label>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-slate-950/50 border ${isOpen ? 'border-cyan-400 ring-1 ring-cyan-400/50' : 'border-slate-700'} rounded-md shadow-sm py-3 px-4 text-white transition-all duration-300 hover:border-cyan-500/50 focus:outline-none`}
+        className={`w-full flex items-center justify-between bg-slate-950/50 border ${currentTheme.border} rounded-md shadow-sm py-3 px-4 text-white transition-all duration-300 ${currentTheme.hoverBorder} focus:outline-none`}
       >
-        <span className="truncate">{value}</span>
+        <span className={`truncate ${!value ? 'text-slate-500' : 'text-white'}`}>{value || placeholder}</span>
         <svg
-          className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180 text-cyan-400' : ''}`}
+          className={`w-5 h-5 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''} ${currentTheme.iconColor}`}
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"
           fill="currentColor"
@@ -197,7 +222,7 @@ const CustomModelDropdown: React.FC<{
               }}
               className={`w-full text-left px-4 py-3 text-sm transition-colors border-b border-slate-800/50 last:border-0
                 ${value === option 
-                  ? 'bg-cyan-900/40 text-cyan-300 font-semibold' 
+                  ? `${currentTheme.selectedBg} ${currentTheme.selectedText} font-semibold` 
                   : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
               `}
             >
@@ -342,13 +367,13 @@ const TextFormFields: React.FC<{
     if (options.type !== 'Text') return null;
     return (
         <>
-            <SelectField
-                  id="herramienta"
+            <CustomDropdown
                   label="Herramienta / Capacidad Especial"
                   value={options.herramienta}
-                  onChange={(e) => handleOptionChange('herramienta', e.target.value)}
+                  onChange={(val) => handleOptionChange('herramienta', val)}
                   options={HERRAMIENTA_TEXT_OPTIONS}
                   placeholder="Selecciona una capacidad..."
+                  variant="indigo"
                   labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-indigo-900/40 border-indigo-500 text-indigo-300 shadow-indigo-500/20"
             />
             <Section 
@@ -631,11 +656,12 @@ export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onT
         </button>
       </div>
       
-      <CustomModelDropdown
+      <CustomDropdown
         value={selectedModel}
         onChange={onModelChange}
         options={AI_MODELS}
         label="Elige tu modelo de IA preferido"
+        variant="cyan"
       />
 
       <div className="mb-6">
