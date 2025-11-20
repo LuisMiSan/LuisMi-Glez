@@ -16,10 +16,12 @@ export interface TextPromptOptions {
   contexto: string;
   formato: string;
   tono: string;
+  herramienta: string; // New: Search, Maps, Thinking, Standard
 }
 
 export interface ImagePromptOptions {
     type: 'Image';
+    modo: string; // New: Generar, Editar, Analizar
     descripcion: string;
     estilo: string;
     composicion: string;
@@ -29,6 +31,7 @@ export interface ImagePromptOptions {
 
 export interface VideoPromptOptions {
     type: 'Video';
+    modo: string; // New: Generar (Veo), Analizar
     escena: string;
     accion: string;
     estiloVisual: string;
@@ -38,6 +41,7 @@ export interface VideoPromptOptions {
 
 export interface AudioPromptOptions {
     type: 'Audio';
+    modo: string; // New: Music, TTS, Transcription, Live API
     tipoSonido: string;
     genero: string;
     atmosfera: string;

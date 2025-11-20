@@ -1,3 +1,4 @@
+
 import type { PromptOptions, TabType } from '../types';
 
 export const getInitialOptions = (tab: TabType): PromptOptions => {
@@ -10,10 +11,12 @@ export const getInitialOptions = (tab: TabType): PromptOptions => {
         contexto: '',
         formato: '',
         tono: '',
+        herramienta: 'Estándar (Flash/Pro)',
       };
     case 'Image':
       return {
         type: 'Image',
+        modo: 'Generar Imagen (Imagen 4)',
         descripcion: '',
         estilo: '',
         composicion: '',
@@ -23,6 +26,7 @@ export const getInitialOptions = (tab: TabType): PromptOptions => {
     case 'Video':
       return {
         type: 'Video',
+        modo: 'Generar Video (Veo)',
         escena: '',
         accion: '',
         estiloVisual: '',
@@ -32,6 +36,7 @@ export const getInitialOptions = (tab: TabType): PromptOptions => {
     case 'Audio':
       return {
         type: 'Audio',
+        modo: 'Generar Efecto/Música',
         tipoSonido: '',
         genero: '',
         atmosfera: '',

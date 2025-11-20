@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import type { PromptOptions, TabType } from '../types';
 import { useSpeechRecognition } from '../hooks/useSpeechRecognition';
 
@@ -77,7 +78,7 @@ const TextAreaField = React.memo<{
         onChange={onChange}
         placeholder={isListening ? 'Escuchando...' : placeholder}
         rows={rows}
-        className="w-full bg-slate-950/50 border border-slate-700 rounded-md p-4 pr-10 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)] transition-all duration-300"
+        className="w-full bg-slate-950/50 border border-slate-700 rounded-md p-4 pr-10 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)] transition-all duration-300"
       />
       {onVoiceClick && <VoiceButton isListening={!!isListening} onClick={onVoiceClick} isSupported={!!isSpeechSupported} />}
     </div>
@@ -118,9 +119,10 @@ const SelectField = React.memo<{
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: readonly string[] | string[];
   placeholder: string;
-}>(({ id, label, value, onChange, options, placeholder }) => (
+  labelClassName?: string;
+}>(({ id, label, value, onChange, options, placeholder, labelClassName }) => (
   <div className="mb-4">
-    <label htmlFor={id} className="block text-sm font-bold text-slate-200 mb-2 tracking-wide">
+    <label htmlFor={id} className={labelClassName || "block text-sm font-bold text-slate-200 mb-2 tracking-wide"}>
       {label}
     </label>
     <div className="relative">
@@ -142,8 +144,103 @@ const SelectField = React.memo<{
   </div>
 ));
 
+// Custom Dropdown for AI Model to ensure styling matches the app (dark mode/neon)
+const CustomModelDropdown: React.FC<{
+  value: string;
+  onChange: (val: string) => void;
+  options: string[];
+  label: string;
+}> = ({ value, onChange, options, label }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="mb-6 relative" ref={containerRef}>
+      <label className="block text-sm font-bold text-slate-200 mb-2 tracking-wide">
+        {label}
+      </label>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between bg-slate-950/50 border ${isOpen ? 'border-cyan-400 ring-1 ring-cyan-400/50' : 'border-slate-700'} rounded-md shadow-sm py-3 px-4 text-white transition-all duration-300 hover:border-cyan-500/50 focus:outline-none`}
+      >
+        <span className="truncate">{value}</span>
+        <svg
+          className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'transform rotate-180 text-cyan-400' : ''}`}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-slate-900 border border-slate-700 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] max-h-60 overflow-y-auto backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-3 text-sm transition-colors border-b border-slate-800/50 last:border-0
+                ${value === option 
+                  ? 'bg-cyan-900/40 text-cyan-300 font-semibold' 
+                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'}
+              `}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 // --- OPCIONES PARA DESPLEGABLES ---
+
+const HERRAMIENTA_TEXT_OPTIONS = [
+  'Estándar (Flash/Pro)',
+  'Google Search Grounding (Datos Reales)',
+  'Google Maps Grounding (Ubicaciones)',
+  'Thinking Mode (Razonamiento Complejo)',
+  'Chatbot (Conversacional)',
+  'Respuesta Rápida (Flash Lite)'
+] as const;
+
+const MODO_IMAGE_OPTIONS = [
+  'Generar Imagen (Imagen 4)',
+  'Editar Imagen (Nano Banana/Flash Image)',
+  'Analizar Imagen (Multimodal)',
+  'Controlar Aspect Ratio'
+] as const;
+
+const MODO_VIDEO_OPTIONS = [
+  'Generar Video (Veo 3.1)',
+  'Analizar Video (Multimodal)',
+  'Extender Video'
+] as const;
+
+const MODO_AUDIO_OPTIONS = [
+  'Generar Efecto/Música',
+  'Texto a Voz (TTS)',
+  'Transcripción (Speech to Text)',
+  'Live API (Conversación Real-time)'
+] as const;
 
 const FORMATO_OPTIONS = [
   'Párrafo', 'Lista con viñetas', 'Lista numerada', 'Tabla', 'JSON', 'XML', 
@@ -245,6 +342,15 @@ const TextFormFields: React.FC<{
     if (options.type !== 'Text') return null;
     return (
         <>
+            <SelectField
+                  id="herramienta"
+                  label="Herramienta / Capacidad Especial"
+                  value={options.herramienta}
+                  onChange={(e) => handleOptionChange('herramienta', e.target.value)}
+                  options={HERRAMIENTA_TEXT_OPTIONS}
+                  placeholder="Selecciona una capacidad..."
+                  labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-indigo-900/40 border-indigo-500 text-indigo-300 shadow-indigo-500/20"
+            />
             <Section 
               title="Define el Objetivo" 
               description="¿Qué necesitas que haga la IA? Sé específico y claro." 
@@ -277,6 +383,7 @@ const TextFormFields: React.FC<{
                   onChange={(e) => handleOptionChange('formato', e.target.value)}
                   options={FORMATO_OPTIONS}
                   placeholder="Selecciona un formato..."
+                  labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-teal-900/40 border-teal-500 text-teal-300 shadow-teal-500/20"
                 />
                 <SelectField
                   id="tono"
@@ -285,6 +392,7 @@ const TextFormFields: React.FC<{
                   onChange={(e) => handleOptionChange('tono', e.target.value)}
                   options={TONO_OPTIONS}
                   placeholder="Selecciona un tono..."
+                  labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-rose-900/40 border-rose-500 text-rose-300 shadow-rose-500/20"
                 />
             </div>
         </>
@@ -302,13 +410,22 @@ const ImageFormFields: React.FC<{
     if (options.type !== 'Image') return null;
     return (
          <>
+            <SelectField
+                id="modo"
+                label="Modo de Imagen / Tarea"
+                value={options.modo}
+                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                options={MODO_IMAGE_OPTIONS}
+                placeholder="Selecciona una tarea..."
+                labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-fuchsia-900/40 border-fuchsia-500 text-fuchsia-300 shadow-fuchsia-500/20"
+            />
             <Section 
-              title="Descripción Principal" 
-              description="Describe el sujeto, la escena y los elementos clave de la imagen." 
+              title="Descripción / Instrucción" 
+              description="Describe la imagen a generar, o la edición que deseas realizar." 
               icon={<ImageIcon/>}
               colorClass="bg-pink-900/40 border-pink-500 text-pink-300 shadow-pink-500/20"
             >
-                <TextAreaField id="descripcion" value={options.descripcion} onChange={(e) => handleOptionChange('descripcion', e.target.value)} placeholder='ej: "Un astronauta montando un caballo en Marte, estilo fotorrealista."' rows={4} isListening={isListening && voiceTargetField === 'descripcion'} onVoiceClick={() => handleVoiceStart('descripcion')} isSpeechSupported={isSpeechSupported}/>
+                <TextAreaField id="descripcion" value={options.descripcion} onChange={(e) => handleOptionChange('descripcion', e.target.value)} placeholder='ej: "Un astronauta montando un caballo en Marte" o "Añade gafas de sol al gato".' rows={4} isListening={isListening && voiceTargetField === 'descripcion'} onVoiceClick={() => handleVoiceStart('descripcion')} isSpeechSupported={isSpeechSupported}/>
             </Section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <SelectField
@@ -359,6 +476,15 @@ const VideoFormFields: React.FC<{
     if (options.type !== 'Video') return null;
     return (
         <div className="space-y-4">
+            <SelectField
+                id="modo"
+                label="Modo de Video"
+                value={options.modo}
+                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                options={MODO_VIDEO_OPTIONS}
+                placeholder="Selecciona un modo..."
+                labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-red-900/40 border-red-500 text-red-300 shadow-red-500/20"
+            />
             <Section 
               title="Escena Principal" 
               description="Describe la escena general, el entorno y el sujeto principal del video." 
@@ -388,6 +514,15 @@ const AudioFormFields: React.FC<{
     if (options.type !== 'Audio') return null;
     return (
         <div className="space-y-4">
+             <SelectField
+                id="modo"
+                label="Modo de Audio"
+                value={options.modo}
+                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                options={MODO_AUDIO_OPTIONS}
+                placeholder="Selecciona un modo..."
+                labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-yellow-900/40 border-yellow-500 text-yellow-300 shadow-yellow-500/20"
+            />
             <Section 
               title="Tipo de Sonido/Música" 
               description="Describe el sonido principal que quieres generar." 
@@ -490,20 +625,18 @@ export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onT
 
   return (
     <div className="bg-slate-900/60 border border-cyan-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-sm">
-      <h2 className="inline-block text-lg font-bold text-white mb-6 px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)]">
-        1. Construye tu prompt
-      </h2>
-      
-      <div className="mb-6">
-        <SelectField
-          id="ai-model-selector"
-          label="Modelo de IA Destino"
-          value={selectedModel}
-          onChange={(e) => onModelChange(e.target.value)}
-          options={AI_MODELS}
-          placeholder="Selecciona el modelo de IA que usarás"
-        />
+      <div className="flex items-center justify-between mb-6">
+        <button className="text-sm font-bold text-white px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)] tracking-wide">
+            1. Construye tu prompt
+        </button>
       </div>
+      
+      <CustomModelDropdown
+        value={selectedModel}
+        onChange={onModelChange}
+        options={AI_MODELS}
+        label="Elige tu modelo de IA preferido"
+      />
 
       <div className="mb-6">
         <div className="flex border-b border-slate-700 overflow-x-auto">

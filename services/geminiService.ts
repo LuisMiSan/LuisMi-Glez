@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from '@google/genai';
 import type { PromptOptions } from '../types';
 
@@ -62,6 +63,7 @@ function formatOptionsToString(options: PromptOptions): string {
 
   switch (options.type) {
     case 'Text':
+      structuredInput += buildSection('Herramienta / Capacidad Requerida', options.herramienta);
       structuredInput += buildSection('Objetivo Principal', options.objetivo);
       structuredInput += buildSection('Rol de la IA', options.rol);
       structuredInput += buildSection('Contexto', options.contexto);
@@ -69,6 +71,7 @@ function formatOptionsToString(options: PromptOptions): string {
       structuredInput += buildSection('Tono', options.tono);
       break;
     case 'Image':
+      structuredInput += buildSection('Modo de Imagen', options.modo);
       structuredInput += buildSection('Descripción Principal', options.descripcion);
       structuredInput += buildSection('Estilo Artístico', options.estilo);
       structuredInput += buildSection('Composición y Encuadre', options.composicion);
@@ -76,6 +79,7 @@ function formatOptionsToString(options: PromptOptions): string {
       structuredInput += buildSection('Parámetros Adicionales', options.extras);
       break;
     case 'Video':
+        structuredInput += buildSection('Modo de Video', options.modo);
         structuredInput += buildSection('Escena Principal', options.escena);
         structuredInput += buildSection('Acción Principal', options.accion);
         structuredInput += buildSection('Estilo Visual', options.estiloVisual);
@@ -83,6 +87,7 @@ function formatOptionsToString(options: PromptOptions): string {
         structuredInput += buildSection('Detalles Adicionales', options.extras);
         break;
     case 'Audio':
+        structuredInput += buildSection('Modo de Audio', options.modo);
         structuredInput += buildSection('Tipo de Sonido/Música', options.tipoSonido);
         structuredInput += buildSection('Género/Estilo', options.genero);
         structuredInput += buildSection('Emoción y Atmósfera', options.atmosfera);
@@ -137,23 +142,26 @@ export async function constructPrompt(options: PromptOptions, model: string): Pr
       **OPTIMIZACIÓN PARA MODELO DESTINO:**
       El usuario tiene la intención de utilizar este prompt con el modelo de IA: "${model}".
       Ajusta tu vocabulario, estructura y parámetros técnicos específicamente para las fortalezas y peculiaridades de "${model}". 
-      Por ejemplo, si es Midjourney/Imagen, usa parámetros como '--ar', '--v', o descripciones visuales densas. Si es GPT-4/Gemini Pro, enfócate en el razonamiento y el contexto lógico.
+      
+      **INSTRUCCIONES ESPECIALES SEGÚN MODO/HERRAMIENTA:**
+      - Si el usuario pide "Google Search Grounding", "Maps Grounding" o "Thinking Mode", el prompt resultante DEBE instruir explícitamente a la IA para usar esas herramientas o configuraciones.
+      - Si es "Generación de Video (Veo)", usa terminología cinematográfica estricta y relación de aspecto 16:9 o 9:16.
+      - Si es "Edición de Imagen", el prompt debe describir claramente qué cambiar (add/remove) usando lenguaje natural claro.
+      - Si es "Live API", el prompt debe ser una "System Instruction" para definir la personalidad de la voz.
+      - Si es "TTS", el prompt debe ser el texto puro a leer con indicaciones de entonación.
 
       **Proceso de Pensamiento (Sigue estos pasos internamente):**
-      1.  **Análisis:** Analiza los datos de entrada del usuario para identificar el tipo de IA (Texto, Imagen, Video, Audio, Código), la intención central y los elementos clave.
+      1.  **Análisis:** Analiza los datos de entrada del usuario, especialmente el campo "Herramienta/Modo" para determinar el contexto técnico.
       2.  **Expansión Creativa y Técnica:** Basándote en la entrada, expande cada sección. No te limites a repetir la información. Añade detalles creativos y técnicos que enriquezcan la petición. Piensa en qué elementos faltan para que el resultado sea 10 veces mejor.
       3.  **Construcción Experta:** Ensambla un nuevo prompt, mucho más rico y estructurado, utilizando la información expandida y optimizado para "${model}".
 
       **Reglas para el Prompt Generado (Tu Salida Final):**
-      1.  **Amplifica la Intención Original:** Respeta y profundiza en el objetivo del usuario. No lo cambies, mejóralo.
+      1.  **Amplifica la Intención Original:** Respeta y profundiza en el objetivo del usuario.
       2.  **Añade Profundidad y Detalle:**
-          *   **Contexto Ampliado:** Proporciona un trasfondo rico y detallado.
+          *   **Contexto Ampliado:** Proporciona un trasfondo rico.
           *   **Especificaciones Técnicas:** Incorpora parámetros relevantes para "${model}".
-          *   **Estilo y Tono Detallados:** Sé ultra-específico.
-          *   **Añade Restricciones y "Negative Prompts":** Si es apropiado para "${model}".
       3.  **Síntesis Cohesiva:** Tu tarea más importante es sintetizar toda la información en un único prompt coherente.
-      4.  **Extensión Significativa:** El prompt resultante debe ser un texto completo y bien desarrollado.
-      5.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas explicaciones ni notas. Solo el prompt final.
+      4.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas explicaciones ni notas. Solo el prompt final.
     `;
 
     const response = await ai.models.generateContent({
