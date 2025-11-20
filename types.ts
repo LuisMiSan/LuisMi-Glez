@@ -65,4 +65,8 @@ export type PromptOptions =
 export interface HistoryItem {
   id: string;
   options: PromptOptions;
+  generatedPrompt?: string; // El texto final del prompt
+  isEnhanced?: boolean;     // Si ha sido mejorado por IA (Recomendado)
+  createdAt?: string;       // Fecha de creación
+  tags?: string[];          // Etiquetas autogeneradas
 }

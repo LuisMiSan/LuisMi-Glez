@@ -79,7 +79,7 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
       case AppState.SUCCESS:
         if (!prompt) return null;
         return (
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-slate-200">
+          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-fuchsia-50/90">
             <code>{prompt}</code>
           </pre>
         );
@@ -87,7 +87,7 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full text-slate-500">
-            <SparkleIcon className="w-12 h-12 mb-4" />
+            <SparkleIcon className="w-12 h-12 mb-4 text-fuchsia-500/50" />
             <p className="font-semibold text-center">Tu prompt aparecerá aquí</p>
             <p className="text-sm text-center mt-1">Completa los campos y haz clic en "Generar Prompt".</p>
           </div>
@@ -96,14 +96,14 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
   };
 
   return (
-    <div className="relative bg-slate-800/50 border border-slate-700 rounded-xl shadow-2xl flex flex-col h-full">
-      <div className="p-4 border-b border-slate-700 flex justify-between items-center flex-wrap gap-2">
-        <h2 className="text-xl font-semibold text-slate-100">2. Prompt Generado</h2>
+    <div className="relative bg-slate-900/60 border border-fuchsia-500/30 rounded-xl shadow-[0_0_30px_rgba(217,70,239,0.15)] backdrop-blur-sm flex flex-col h-full">
+      <div className="p-4 border-b border-fuchsia-500/20 flex justify-between items-center flex-wrap gap-2">
+        <h2 className="text-xl font-semibold text-fuchsia-300 drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]">2. Prompt Generado</h2>
         {state === AppState.SUCCESS && prompt && (
           <div className="flex gap-2">
              <button
               onClick={onEnhance}
-              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-md text-sm transition-all shadow-[0_0_10px_rgba(147,51,234,0.5)] border border-purple-400/50"
               title="Mejorar este prompt con IA"
             >
               <SparkleIcon className="w-4 h-4" />
@@ -111,7 +111,7 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
             </button>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
               title={copied ? 'Copiado' : 'Copiar'}
             >
               {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
@@ -119,7 +119,7 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors shadow-[0_0_10px_rgba(6,182,212,0.3)]"
               title="Guardar Prompt"
             >
               <SaveIcon className="w-4 h-4" />

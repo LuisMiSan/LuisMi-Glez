@@ -9,6 +9,7 @@ import { constructPrompt, enhancePrompt } from './services/geminiService';
 import { AppState } from './types';
 import type { PromptOptions, HistoryItem, TabType } from './types';
 import { getInitialOptions } from './utils/optionsHelper';
+import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 
 const SAVED_PROMPTS_KEY = 'perfectPromptSaved_v2'; 
 
@@ -23,6 +24,20 @@ const getHistoryItemTitle = (options: PromptOptions): string => {
     }
 }
 
+// Helper para generar etiquetas automáticas basadas en las opciones
+const generateTags = (options: PromptOptions): string[] => {
+    const tags: string[] = [options.type];
+    if (options.type === 'Text') {
+        if (options.tono) tags.push(options.tono);
+        if (options.formato) tags.push(options.formato);
+    } else if (options.type === 'Image') {
+        if (options.estilo) tags.push(options.estilo);
+    } else if (options.type === 'Code') {
+        if (options.lenguaje) tags.push(options.lenguaje);
+    }
+    return tags.filter(t => t && t.trim() !== '');
+};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('Text');
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
@@ -36,6 +51,15 @@ const App: React.FC = () => {
   const [enhancedPrompt, setEnhancedPrompt] = useState<string | null>(null);
   const [enhanceState, setEnhanceState] = useState<AppState>(AppState.IDLE);
   const [enhanceError, setEnhanceError] = useState<string | null>(null);
+
+  // Voice Command Hooks
+  const { 
+    isListening: isCommandListening, 
+    transcript: commandTranscript, 
+    startListening: startCommandListening,
+    isSupported: isSpeechSupported 
+  } = useSpeechRecognition();
+  const [lastRecognizedCommand, setLastRecognizedCommand] = useState<string | null>(null);
 
 
   useEffect(() => {
@@ -57,19 +81,37 @@ const App: React.FC = () => {
     }
   }, [savedPrompts]);
 
-  const resetAppState = () => {
+  const resetAppState = useCallback(() => {
     setGeneratedPrompt(null);
     setAppState(AppState.IDLE);
     setError(null);
     setEnhancedPrompt(null);
     setEnhanceState(AppState.IDLE);
     setEnhanceError(null);
-  };
+  }, []);
 
   const handleTabChange = useCallback((tab: TabType) => {
     setActiveTab(tab);
     setOptions(getInitialOptions(tab));
     resetAppState();
+  }, [resetAppState]);
+
+  const handleClearForm = useCallback(() => {
+    setOptions(getInitialOptions(activeTab));
+    resetAppState();
+  }, [activeTab, resetAppState]);
+
+  const addPromptToHistory = useCallback((newEntry: HistoryItem) => {
+    setSavedPrompts(prev => {
+      // Simple duplicate check based on ID or core content
+      const isDuplicate = prev.some(item => item.id === newEntry.id);
+      
+      if (isDuplicate) {
+          return prev;
+      }
+      const updatedHistory = [newEntry, ...prev];
+      return updatedHistory.length > 50 ? updatedHistory.slice(0, 50) : updatedHistory;
+    });
   }, []);
 
   const handleGeneratePrompt = useCallback(async () => {
@@ -80,12 +122,24 @@ const App: React.FC = () => {
       const result = await constructPrompt(options, selectedModel);
       setGeneratedPrompt(result);
       setAppState(AppState.SUCCESS);
+
+      // Auto-save to history
+      const newEntry: HistoryItem = { 
+        id: new Date().toISOString(), 
+        options: { ...options }, // Copia profunda simple
+        generatedPrompt: result,
+        isEnhanced: false,
+        createdAt: new Date().toLocaleDateString(),
+        tags: generateTags(options)
+      };
+      addPromptToHistory(newEntry);
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
       setError(errorMessage);
       setAppState(AppState.ERROR);
     }
-  }, [options, selectedModel]);
+  }, [options, selectedModel, resetAppState, addPromptToHistory]);
 
   const handleEnhancePrompt = useCallback(async () => {
     if (!generatedPrompt) return;
@@ -105,76 +159,138 @@ const App: React.FC = () => {
     }
   }, [generatedPrompt, selectedModel]);
 
-
-  const addPromptToHistory = (newEntry: HistoryItem) => {
-    setSavedPrompts(prev => {
-      const isDuplicate = prev.some(item => 
-        (item.options.type === 'Text' && newEntry.options.type === 'Text' && item.options.objetivo === newEntry.options.objetivo) ||
-        (JSON.stringify(item.options) === JSON.stringify(newEntry.options))
-      );
-      if (isDuplicate) {
-          return prev;
-      }
-      const updatedHistory = [newEntry, ...prev];
-      return updatedHistory.length > 30 ? updatedHistory.slice(0, 30) : updatedHistory;
-    });
-  };
-
   const handleSavePrompt = useCallback(() => {
     if (!generatedPrompt) return;
     const newEntry: HistoryItem = { 
       id: new Date().toISOString(), 
-      options 
+      options: { ...options },
+      generatedPrompt: generatedPrompt,
+      isEnhanced: false,
+      createdAt: new Date().toLocaleDateString(),
+      tags: generateTags(options)
     };
     addPromptToHistory(newEntry);
-  }, [generatedPrompt, options]);
+  }, [generatedPrompt, options, addPromptToHistory]);
   
   const handleSaveEnhancedPrompt = useCallback(() => {
     if (!enhancedPrompt) return;
 
-    // Primero, nos aseguramos de que el prompt original esté guardado.
-    // La función addPromptToHistory ya maneja los duplicados.
-    const originalEntry: HistoryItem = { 
-      id: new Date().toISOString(), 
-      options 
-    };
-    addPromptToHistory(originalEntry);
-    
-    // Luego, guardamos el prompt mejorado.
+    // Guardamos el prompt mejorado como una nueva entrada
+    const enhancedOptions = { ...options }; 
+    if (enhancedOptions.type === 'Text') {
+        enhancedOptions.rol = `(Mejorado) ${enhancedOptions.rol}`;
+    }
+
     const newEntry: HistoryItem = {
-      id: `${new Date().toISOString()}-enhanced`, // Se añade un sufijo para asegurar un ID único
-      options: {
-        type: 'Text',
-        objetivo: enhancedPrompt,
-        rol: `Mejorado desde: "${getHistoryItemTitle(options).substring(0, 50)}..."`,
-        contexto: '',
-        formato: '',
-        tono: '',
-      }
+      id: `${new Date().toISOString()}-enhanced`,
+      options: enhancedOptions,
+      generatedPrompt: enhancedPrompt,
+      isEnhanced: true,
+      createdAt: new Date().toLocaleDateString(),
+      tags: [...generateTags(options), 'Mejorado']
     };
     addPromptToHistory(newEntry);
-  }, [enhancedPrompt, options]);
+  }, [enhancedPrompt, options, addPromptToHistory]);
 
 
   const handleSelectHistory = useCallback((item: HistoryItem) => {
     setActiveTab(item.options.type);
     setOptions(item.options);
-    resetAppState();
+    
+    // Restore generated state if available
+    if (item.generatedPrompt) {
+        setGeneratedPrompt(item.generatedPrompt);
+        setAppState(AppState.SUCCESS);
+        if (item.isEnhanced) {
+            setEnhancedPrompt(item.generatedPrompt); // If it was saved as enhanced
+            setEnhanceState(AppState.SUCCESS);
+        } else {
+            setEnhancedPrompt(null);
+            setEnhanceState(AppState.IDLE);
+        }
+    } else {
+        resetAppState();
+    }
+    
     window.scrollTo(0, 0);
-  }, []);
+  }, [resetAppState]);
 
   const handleClearHistory = useCallback(() => {
-    setSavedPrompts([]);
+    if(window.confirm("¿Estás seguro de que quieres borrar todo el historial?")) {
+        setSavedPrompts([]);
+    }
   }, []);
 
-  const handleClearForm = useCallback(() => {
-    setOptions(getInitialOptions(activeTab));
-    resetAppState();
-  }, [activeTab]);
+  // --- Voice Command Logic ---
+  useEffect(() => {
+    if (!commandTranscript) return;
+
+    const cmd = commandTranscript.toLowerCase();
+    let executed = false;
+
+    // Navigation Commands
+    if (cmd.includes('modo texto') || cmd.includes('texto')) {
+        handleTabChange('Text');
+        setLastRecognizedCommand('Modo Texto');
+        executed = true;
+    } else if (cmd.includes('modo imagen') || cmd.includes('imagen') || cmd.includes('imágenes')) {
+        handleTabChange('Image');
+        setLastRecognizedCommand('Modo Imagen');
+        executed = true;
+    } else if (cmd.includes('modo video') || cmd.includes('vídeo') || cmd.includes('video')) {
+        handleTabChange('Video');
+        setLastRecognizedCommand('Modo Video');
+        executed = true;
+    } else if (cmd.includes('modo audio') || cmd.includes('audio') || cmd.includes('sonido')) {
+        handleTabChange('Audio');
+        setLastRecognizedCommand('Modo Audio');
+        executed = true;
+    } else if (cmd.includes('modo código') || cmd.includes('código') || cmd.includes('programación')) {
+        handleTabChange('Code');
+        setLastRecognizedCommand('Modo Código');
+        executed = true;
+    } 
+    
+    // Action Commands
+    else if (cmd.includes('generar') || cmd.includes('crear') || cmd.includes('construir')) {
+        handleGeneratePrompt();
+        setLastRecognizedCommand('Generar Prompt');
+        executed = true;
+    } else if (cmd.includes('limpiar') || cmd.includes('borrar') || cmd.includes('reiniciar')) {
+        handleClearForm();
+        setLastRecognizedCommand('Limpiar Formulario');
+        executed = true;
+    } else if (cmd.includes('guardar') || cmd.includes('salvar')) {
+        if (enhancedPrompt) {
+             handleSaveEnhancedPrompt();
+             setLastRecognizedCommand('Guardar Mejorado');
+        } else if (generatedPrompt) {
+             handleSavePrompt();
+             setLastRecognizedCommand('Guardar Prompt');
+        }
+        executed = true;
+    } else if (cmd.includes('mejorar') || cmd.includes('refinar') || cmd.includes('optimizar')) {
+        handleEnhancePrompt();
+        setLastRecognizedCommand('Mejorar Prompt');
+        executed = true;
+    }
+
+    if (executed) {
+        const timer = setTimeout(() => setLastRecognizedCommand(null), 3000);
+        return () => clearTimeout(timer);
+    }
+
+  }, [commandTranscript, handleTabChange, handleGeneratePrompt, handleClearForm, handleSavePrompt, handleSaveEnhancedPrompt, handleEnhancePrompt, generatedPrompt, enhancedPrompt]);
+
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+      <Header 
+        isListening={isCommandListening} 
+        onVoiceCommandStart={startCommandListening} 
+        isSupported={isSpeechSupported}
+        lastCommand={lastRecognizedCommand}
+      />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto flex flex-col gap-8">
             <PromptInputForm
@@ -204,7 +320,7 @@ const App: React.FC = () => {
             )}
         </div>
         
-        <div className="mt-12 pt-8 border-t border-slate-700/50 max-w-4xl mx-auto w-full">
+        <div className="mt-12 pt-8 border-t border-slate-800 w-full">
            <HistoryPanel 
               history={savedPrompts}
               onSelect={handleSelectHistory}

@@ -103,14 +103,29 @@ function formatOptionsToString(options: PromptOptions): string {
   return structuredInput.trim();
 }
 
+/**
+ * Determina qué modelo de Gemini usar internamente para la tarea de generación de texto.
+ * Si el usuario selecciona un modelo "Pro" o un modelo externo complejo, usamos Gemini 3 Pro.
+ * Para tareas rápidas o modelos estándar, usamos Flash.
+ */
+function getEngineModel(selectedModel: string): string {
+    if (
+        selectedModel === 'gemini-3-pro-preview' || 
+        selectedModel.includes('gpt') || 
+        selectedModel.includes('claude')
+    ) {
+        return 'gemini-3-pro-preview';
+    }
+    return 'gemini-2.5-flash';
+}
+
 export async function constructPrompt(options: PromptOptions, model: string): Promise<string> {
   if (!process.env.API_KEY) {
     throw new Error("API_KEY is not configured.");
   }
-  if (model !== 'gemini-2.5-flash') {
-    throw new Error(`El modelo "${model}" no está implementado todavía. Por favor, selecciona 'gemini-2.5-flash'.`);
-  }
   
+  // Mapeamos el modelo seleccionado por el usuario a un modelo real de Gemini capaz de razonar
+  const engineModel = getEngineModel(model);
   const userInput = formatOptionsToString(options);
 
   try {
@@ -119,25 +134,30 @@ export async function constructPrompt(options: PromptOptions, model: string): Pr
     const systemInstruction = `
       Actúa como un ingeniero de prompts de clase mundial, un verdadero maestro en el arte de comunicarte con modelos de IA generativa. Tu misión es transformar los datos estructurados que te proporciona el usuario en una obra maestra de la ingeniería de prompts. El resultado debe ser un prompt completo, significativamente extenso, detallado, matizado y potente.
 
+      **OPTIMIZACIÓN PARA MODELO DESTINO:**
+      El usuario tiene la intención de utilizar este prompt con el modelo de IA: "${model}".
+      Ajusta tu vocabulario, estructura y parámetros técnicos específicamente para las fortalezas y peculiaridades de "${model}". 
+      Por ejemplo, si es Midjourney/Imagen, usa parámetros como '--ar', '--v', o descripciones visuales densas. Si es GPT-4/Gemini Pro, enfócate en el razonamiento y el contexto lógico.
+
       **Proceso de Pensamiento (Sigue estos pasos internamente):**
       1.  **Análisis:** Analiza los datos de entrada del usuario para identificar el tipo de IA (Texto, Imagen, Video, Audio, Código), la intención central y los elementos clave.
       2.  **Expansión Creativa y Técnica:** Basándote en la entrada, expande cada sección. No te limites a repetir la información. Añade detalles creativos y técnicos que enriquezcan la petición. Piensa en qué elementos faltan para que el resultado sea 10 veces mejor.
-      3.  **Construcción Experta:** Ensambla un nuevo prompt, mucho más rico y estructurado, utilizando la información expandida.
+      3.  **Construcción Experta:** Ensambla un nuevo prompt, mucho más rico y estructurado, utilizando la información expandida y optimizado para "${model}".
 
       **Reglas para el Prompt Generado (Tu Salida Final):**
       1.  **Amplifica la Intención Original:** Respeta y profundiza en el objetivo del usuario. No lo cambies, mejóralo.
       2.  **Añade Profundidad y Detalle:**
-          *   **Contexto Ampliado:** Proporciona un trasfondo rico y detallado. Si es una historia, crea un mundo. Si es código, define el caso de uso.
-          *   **Especificaciones Técnicas:** Incorpora parámetros relevantes para el tipo de IA. Para imágenes/videos, incluye detalles sobre composición, ángulo de cámara, tipo de lente, iluminación (ej: "iluminación volumétrica cinematográfica"), estilo artístico específico (ej: "al estilo de Syd Mead con toques de Art Déco"), y parámetros como --ar 16:9, 8K, fotorrealista. Para código, añade consideraciones sobre eficiencia, escalabilidad y casos límite.
-          *   **Estilo y Tono Detallados:** Sé ultra-específico. En lugar de "amigable", usa "amigable, pero con un tono de autoridad y confianza, usando un lenguaje claro y accesible para un principiante".
-          *   **Añade Restricciones y "Negative Prompts":** Si es apropiado, especifica qué NO hacer. Ej: "Evita clichés", "No usar colores pastel", --no text, blurry background.
-      3.  **Síntesis Cohesiva:** Tu tarea más importante es sintetizar toda la información expandida (rol, contexto, objetivo, formato, tono, etc.) en un único prompt coherente y fluido. El resultado final debe ser un texto listo para usar, no una lista de secciones. Integra todos los elementos de forma natural.
+          *   **Contexto Ampliado:** Proporciona un trasfondo rico y detallado.
+          *   **Especificaciones Técnicas:** Incorpora parámetros relevantes para "${model}".
+          *   **Estilo y Tono Detallados:** Sé ultra-específico.
+          *   **Añade Restricciones y "Negative Prompts":** Si es apropiado para "${model}".
+      3.  **Síntesis Cohesiva:** Tu tarea más importante es sintetizar toda la información en un único prompt coherente.
       4.  **Extensión Significativa:** El prompt resultante debe ser un texto completo y bien desarrollado.
-      5.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas los encabezados de las secciones (como ## OBJETIVO, ## CONTEXTO), introducciones, explicaciones, ni notas. Solo el prompt final.
+      5.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas explicaciones ni notas. Solo el prompt final.
     `;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: engineModel,
       contents: userInput,
       config: {
         systemInstruction: systemInstruction,
@@ -155,32 +175,30 @@ export async function enhancePrompt(existingPrompt: string, model: string): Prom
   if (!process.env.API_KEY) {
     throw new Error("API_KEY is not configured.");
   }
-  if (model !== 'gemini-2.5-flash') {
-    throw new Error(`El modelo "${model}" no está implementado todavía. Por favor, selecciona 'gemini-2.5-flash'.`);
-  }
+
+  // Mapeamos el modelo seleccionado por el usuario a un modelo real de Gemini capaz de razonar
+  const engineModel = getEngineModel(model);
 
   try {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const systemInstruction = `
-      Eres un refinador de prompts de IA de élite. Se te proporcionará un prompt que ya es de alta calidad. Tu única misión es llevarlo a un nivel superior, hacerlo verdaderamente excepcional.
+      Eres un refinador de prompts de IA de élite. Se te proporcionará un prompt que ya es de alta calidad. Tu única misión es llevarlo a un nivel superior, hacerlo verdaderamente excepcional para el modelo "${model}".
 
       **Proceso de Pensamiento (Sigue estos pasos internamente):**
-      1.  **Deconstrucción:** Analiza el prompt existente. Identifica sus fortalezas y, lo más importante, cualquier área de mejora o ambigüedad.
-      2.  **Identificación de Oportunidades:** ¿Se puede añadir más emoción? ¿Faltan detalles técnicos cruciales? ¿Se puede especificar un estilo artístico o de codificación más nicho y preciso? ¿Se pueden sugerir composiciones o perspectivas alternativas?
-      3.  **Reconstrucción Avanzada:** Vuelve a construir el prompt desde cero, incorporando tus mejoras. No te limites a añadir palabras; reestructura si es necesario para un mayor impacto.
+      1.  **Deconstrucción:** Analiza el prompt existente.
+      2.  **Identificación de Oportunidades:** ¿Se puede añadir más emoción o precisión técnica específica para "${model}"?
+      3.  **Reconstrucción Avanzada:** Vuelve a construir el prompt desde cero, incorporando tus mejoras.
 
       **Reglas para el Prompt Mejorado (Tu Salida Final):**
-      1.  **Añade Complejidad y Matices:** Introduce capas adicionales de detalle. Si el prompt pide "un bosque", tú describes "un bosque antiguo y brumoso al amanecer, con rayos de luz atravesando las copas de los árboles y musgo cubriendo las rocas".
-      2.  **Sé Audaz y Creativo:** Sugiere elementos inesperados que se alineen con la intención original pero la hagan más interesante. "Un astronauta en Marte" se convierte en "Un astronauta solitario en Marte, con el casco agrietado reflejando dos lunas, mientras una tormenta de polvo carmesí se gesta en el horizonte".
-      3.  **Incrementa la Especificidad Técnica:** Añade parámetros aún más detallados. Para imágenes, sugiere "lente de 85mm, f/1.4, estilo cinematográfico de Denis Villeneuve". Para código, "implementar un patrón de diseño Singleton para garantizar una única instancia y optimizar el uso de la memoria".
-      4.  **Refina la Estructura:** Asegúrate de que el prompt final tenga un flujo lógico impecable, con las ideas más importantes al principio.
-      5.  **Extiende, no Resumas:** El prompt resultante debe ser notablemente más largo y rico que el original.
-      6.  **Salida Directa:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt mejorado. Sin preámbulos, explicaciones ni comentarios. Solo el prompt.
+      1.  **Añade Complejidad y Matices:** Introduce capas adicionales de detalle.
+      2.  **Optimización para ${model}:** Asegúrate de que el lenguaje y los parámetros sean los ideales para este modelo específico.
+      3.  **Incrementa la Especificidad Técnica:** Añade parámetros aún más detallados.
+      4.  **Salida Directa:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt mejorado. Sin preámbulos. Solo el prompt.
     `;
 
     const response = await ai.models.generateContent({
-      model: model,
+      model: engineModel,
       contents: existingPrompt,
       config: {
         systemInstruction: systemInstruction,

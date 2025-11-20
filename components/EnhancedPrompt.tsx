@@ -79,7 +79,7 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
       case AppState.SUCCESS:
         if (!prompt) return null;
         return (
-          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-slate-200">
+          <pre className="whitespace-pre-wrap break-words font-sans text-sm text-lime-50/90">
             <code>{prompt}</code>
           </pre>
         );
@@ -90,17 +90,17 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
   };
 
   return (
-    <div className="relative bg-slate-800/50 border border-slate-700 rounded-xl shadow-2xl flex flex-col h-full">
-      <div className="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-slate-100 flex items-center gap-2">
-            <MagicIcon className="w-5 h-5 text-purple-400"/>
+    <div className="relative bg-slate-900/60 border border-lime-500/30 rounded-xl shadow-[0_0_30px_rgba(132,204,22,0.15)] backdrop-blur-sm flex flex-col h-full">
+      <div className="p-4 border-b border-lime-500/20 flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-lime-300 drop-shadow-[0_0_8px_rgba(132,204,22,0.6)] flex items-center gap-2">
+            <MagicIcon className="w-5 h-5 text-lime-300"/>
             4. Prompt Mejorado por IA
         </h2>
         {state === AppState.SUCCESS && prompt && (
           <div className="flex gap-2">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
               title={copied ? 'Copiado' : 'Copiar'}
             >
               {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
@@ -108,7 +108,7 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
             </button>
             <button
               onClick={handleSave}
-              className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors"
+              className="flex items-center gap-2 bg-cyan-700 hover:bg-cyan-600 text-white px-3 py-1.5 rounded-md text-sm transition-colors shadow-[0_0_10px_rgba(6,182,212,0.3)]"
               title="Guardar Prompt Mejorado"
             >
               <SaveIcon className="w-4 h-4" />
