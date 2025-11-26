@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { PromptInputForm } from './components/PromptInputForm';
 import { PromptOutput } from './components/PromptOutput';
@@ -10,6 +11,7 @@ import { AppState } from './types';
 import type { PromptOptions, HistoryItem, TabType } from './types';
 import { getInitialOptions } from './utils/optionsHelper';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
+import { generateShareUrl, parseShareUrl } from './utils/urlHelper';
 
 const SAVED_PROMPTS_KEY = 'perfectPromptSaved_v2'; 
 
@@ -73,6 +75,24 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Handle Share URL loading on mount
+  useEffect(() => {
+    const sharedState = parseShareUrl();
+    if (sharedState) {
+        setActiveTab(sharedState.tab);
+        setOptions(sharedState.options);
+        setSelectedModel(sharedState.model);
+        if (sharedState.generated) {
+            setGeneratedPrompt(sharedState.generated);
+            setAppState(AppState.SUCCESS);
+        }
+        if (sharedState.enhanced) {
+            setEnhancedPrompt(sharedState.enhanced);
+            setEnhanceState(AppState.SUCCESS);
+        }
+    }
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem(SAVED_PROMPTS_KEY, JSON.stringify(savedPrompts));
@@ -103,8 +123,11 @@ const App: React.FC = () => {
 
   const addPromptToHistory = useCallback((newEntry: HistoryItem) => {
     setSavedPrompts(prev => {
-      // Simple duplicate check based on ID or core content
-      const isDuplicate = prev.some(item => item.id === newEntry.id);
+      // Evitar duplicados: Comprobamos si ya existe un prompt con el mismo contenido generado.
+      const isDuplicate = prev.some(item => 
+        item.generatedPrompt === newEntry.generatedPrompt && 
+        item.options.type === newEntry.options.type
+      );
       
       if (isDuplicate) {
           return prev;
@@ -126,7 +149,7 @@ const App: React.FC = () => {
       // Auto-save to history
       const newEntry: HistoryItem = { 
         id: new Date().toISOString(), 
-        options: { ...options }, // Copia profunda simple
+        options: { ...options },
         generatedPrompt: result,
         isEnhanced: false,
         createdAt: new Date().toLocaleDateString(),
@@ -175,7 +198,6 @@ const App: React.FC = () => {
   const handleSaveEnhancedPrompt = useCallback(() => {
     if (!enhancedPrompt) return;
 
-    // Guardamos el prompt mejorado como una nueva entrada
     const enhancedOptions = { ...options }; 
     if (enhancedOptions.type === 'Text') {
         enhancedOptions.rol = `(Mejorado) ${enhancedOptions.rol}`;
@@ -192,17 +214,27 @@ const App: React.FC = () => {
     addPromptToHistory(newEntry);
   }, [enhancedPrompt, options, addPromptToHistory]);
 
+  const handleGetShareUrl = useCallback(() => {
+    const state = {
+        tab: activeTab,
+        options,
+        model: selectedModel,
+        generated: generatedPrompt || undefined,
+        enhanced: enhancedPrompt || undefined
+    };
+    return generateShareUrl(state);
+  }, [activeTab, options, selectedModel, generatedPrompt, enhancedPrompt]);
+
 
   const handleSelectHistory = useCallback((item: HistoryItem) => {
     setActiveTab(item.options.type);
     setOptions(item.options);
     
-    // Restore generated state if available
     if (item.generatedPrompt) {
         setGeneratedPrompt(item.generatedPrompt);
         setAppState(AppState.SUCCESS);
         if (item.isEnhanced) {
-            setEnhancedPrompt(item.generatedPrompt); // If it was saved as enhanced
+            setEnhancedPrompt(item.generatedPrompt);
             setEnhanceState(AppState.SUCCESS);
         } else {
             setEnhancedPrompt(null);
@@ -228,39 +260,39 @@ const App: React.FC = () => {
     const cmd = commandTranscript.toLowerCase();
     let executed = false;
 
-    // Navigation Commands
-    if (cmd.includes('modo texto') || cmd.includes('texto')) {
+    // Navigation Commands (Spanish & English support)
+    if (cmd.includes('modo texto') || cmd.includes('texto') || cmd.includes('text mode')) {
         handleTabChange('Text');
         setLastRecognizedCommand('Modo Texto');
         executed = true;
-    } else if (cmd.includes('modo imagen') || cmd.includes('imagen') || cmd.includes('imágenes')) {
+    } else if (cmd.includes('modo imagen') || cmd.includes('imagen') || cmd.includes('imágenes') || cmd.includes('image mode')) {
         handleTabChange('Image');
         setLastRecognizedCommand('Modo Imagen');
         executed = true;
-    } else if (cmd.includes('modo video') || cmd.includes('vídeo') || cmd.includes('video')) {
+    } else if (cmd.includes('modo video') || cmd.includes('vídeo') || cmd.includes('video') || cmd.includes('video mode')) {
         handleTabChange('Video');
         setLastRecognizedCommand('Modo Video');
         executed = true;
-    } else if (cmd.includes('modo audio') || cmd.includes('audio') || cmd.includes('sonido')) {
+    } else if (cmd.includes('modo audio') || cmd.includes('audio') || cmd.includes('sonido') || cmd.includes('audio mode')) {
         handleTabChange('Audio');
         setLastRecognizedCommand('Modo Audio');
         executed = true;
-    } else if (cmd.includes('modo código') || cmd.includes('código') || cmd.includes('programación')) {
+    } else if (cmd.includes('modo código') || cmd.includes('código') || cmd.includes('programación') || cmd.includes('code mode')) {
         handleTabChange('Code');
         setLastRecognizedCommand('Modo Código');
         executed = true;
     } 
     
-    // Action Commands
-    else if (cmd.includes('generar') || cmd.includes('crear') || cmd.includes('construir')) {
+    // Action Commands (Spanish & English support)
+    else if (cmd.includes('generar') || cmd.includes('crear') || cmd.includes('construir') || cmd.includes('generate')) {
         handleGeneratePrompt();
         setLastRecognizedCommand('Generar Prompt');
         executed = true;
-    } else if (cmd.includes('limpiar') || cmd.includes('borrar') || cmd.includes('reiniciar')) {
+    } else if (cmd.includes('limpiar') || cmd.includes('borrar') || cmd.includes('reiniciar') || cmd.includes('clear')) {
         handleClearForm();
         setLastRecognizedCommand('Limpiar Formulario');
         executed = true;
-    } else if (cmd.includes('guardar') || cmd.includes('salvar')) {
+    } else if (cmd.includes('guardar') || cmd.includes('salvar') || cmd.includes('save')) {
         if (enhancedPrompt) {
              handleSaveEnhancedPrompt();
              setLastRecognizedCommand('Guardar Mejorado');
@@ -269,7 +301,7 @@ const App: React.FC = () => {
              setLastRecognizedCommand('Guardar Prompt');
         }
         executed = true;
-    } else if (cmd.includes('mejorar') || cmd.includes('refinar') || cmd.includes('optimizar')) {
+    } else if (cmd.includes('mejorar') || cmd.includes('refinar') || cmd.includes('optimizar') || cmd.includes('enhance')) {
         handleEnhancePrompt();
         setLastRecognizedCommand('Mejorar Prompt');
         executed = true;
@@ -309,6 +341,7 @@ const App: React.FC = () => {
               error={error}
               onSave={handleSavePrompt}
               onEnhance={handleEnhancePrompt}
+              onShare={handleGetShareUrl}
             />
              {enhanceState !== AppState.IDLE && (
               <EnhancedPrompt
@@ -316,6 +349,7 @@ const App: React.FC = () => {
                 state={enhanceState}
                 error={enhanceError}
                 onSave={handleSaveEnhancedPrompt}
+                onShare={handleGetShareUrl}
               />
             )}
         </div>

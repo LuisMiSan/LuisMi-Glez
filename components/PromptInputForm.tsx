@@ -78,7 +78,10 @@ const TextAreaField = React.memo<{
         onChange={onChange}
         placeholder={isListening ? 'Escuchando...' : placeholder}
         rows={rows}
-        className="w-full bg-slate-950/50 border border-slate-700 rounded-md p-4 pr-10 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)] transition-all duration-300"
+        className={`w-full bg-slate-950/50 border rounded-md p-4 pr-10 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 transition-all duration-300 
+        ${isListening 
+            ? 'border-red-500 ring-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]' 
+            : 'border-slate-700 focus:border-cyan-400 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)]'}`}
       />
       {onVoiceClick && <VoiceButton isListening={!!isListening} onClick={onVoiceClick} isSupported={!!isSpeechSupported} />}
     </div>
@@ -94,7 +97,7 @@ const InputField = React.memo<{
   onVoiceClick?: () => void;
   isSpeechSupported?: boolean;
 }>(({ id, label, value, onChange, placeholder, isListening, onVoiceClick, isSpeechSupported }) => (
-  <div className="mb-4">
+  <div className="mb-4 relative">
     <label htmlFor={id} className="block text-sm font-bold text-slate-200 mb-2 tracking-wide">
       {label}
     </label>
@@ -105,41 +108,12 @@ const InputField = React.memo<{
         value={value}
         onChange={onChange}
         placeholder={isListening ? 'Escuchando...' : placeholder}
-        className="w-full bg-slate-950/50 border border-slate-700 rounded-md shadow-sm py-3 px-4 pr-10 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)] transition-all duration-300"
+        className={`w-full bg-slate-950/50 border rounded-md shadow-sm py-3 px-4 pr-10 text-white placeholder-slate-500 focus:outline-none focus:ring-1 transition-all duration-300
+        ${isListening 
+            ? 'border-red-500 ring-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.3)]' 
+            : 'border-slate-700 focus:border-cyan-400 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)]'}`}
       />
        {onVoiceClick && <VoiceButton isListening={!!isListening} onClick={onVoiceClick} isSupported={!!isSpeechSupported} />}
-    </div>
-  </div>
-));
-
-const SelectField = React.memo<{
-  id: string;
-  label: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: readonly string[] | string[];
-  placeholder: string;
-  labelClassName?: string;
-}>(({ id, label, value, onChange, options, placeholder, labelClassName }) => (
-  <div className="mb-4">
-    <label htmlFor={id} className={labelClassName || "block text-sm font-bold text-slate-200 mb-2 tracking-wide"}>
-      {label}
-    </label>
-    <div className="relative">
-      <select
-        id={id}
-        value={value}
-        onChange={onChange}
-        className={`w-full bg-slate-950/50 border border-slate-700 rounded-md shadow-sm py-3 px-4 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 focus:shadow-[0_0_10px_rgba(34,211,238,0.2)] transition-all duration-300 appearance-none ${!value ? 'text-slate-500' : 'text-white'}`}
-      >
-        <option value="" disabled>{placeholder}</option>
-        {options.map(option => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-      </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-        <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-      </div>
     </div>
   </div>
 ));
@@ -151,7 +125,7 @@ interface CustomDropdownProps {
   options: readonly string[] | string[];
   label: string;
   labelClassName?: string;
-  variant?: 'cyan' | 'indigo';
+  variant?: 'cyan' | 'indigo' | 'teal' | 'rose' | 'fuchsia' | 'red' | 'yellow';
   placeholder?: string;
 }
 
@@ -184,13 +158,48 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
         iconColor: isOpen ? 'text-indigo-400' : 'text-slate-400',
         selectedBg: 'bg-indigo-900/40',
         selectedText: 'text-indigo-300'
+    },
+    teal: {
+        border: isOpen ? 'border-teal-500 ring-1 ring-teal-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-teal-500/50',
+        iconColor: isOpen ? 'text-teal-400' : 'text-slate-400',
+        selectedBg: 'bg-teal-900/40',
+        selectedText: 'text-teal-300'
+    },
+    rose: {
+        border: isOpen ? 'border-rose-500 ring-1 ring-rose-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-rose-500/50',
+        iconColor: isOpen ? 'text-rose-400' : 'text-slate-400',
+        selectedBg: 'bg-rose-900/40',
+        selectedText: 'text-rose-300'
+    },
+    fuchsia: {
+        border: isOpen ? 'border-fuchsia-500 ring-1 ring-fuchsia-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-fuchsia-500/50',
+        iconColor: isOpen ? 'text-fuchsia-400' : 'text-slate-400',
+        selectedBg: 'bg-fuchsia-900/40',
+        selectedText: 'text-fuchsia-300'
+    },
+    red: {
+        border: isOpen ? 'border-red-500 ring-1 ring-red-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-red-500/50',
+        iconColor: isOpen ? 'text-red-400' : 'text-slate-400',
+        selectedBg: 'bg-red-900/40',
+        selectedText: 'text-red-300'
+    },
+    yellow: {
+        border: isOpen ? 'border-yellow-500 ring-1 ring-yellow-500/50' : 'border-slate-700',
+        hoverBorder: 'hover:border-yellow-500/50',
+        iconColor: isOpen ? 'text-yellow-400' : 'text-slate-400',
+        selectedBg: 'bg-yellow-900/40',
+        selectedText: 'text-yellow-300'
     }
   };
 
   const currentTheme = theme[variant];
 
   return (
-    <div className="mb-6 relative" ref={containerRef}>
+    <div className={`mb-6 relative ${isOpen ? 'z-[100]' : 'z-0'}`} ref={containerRef}>
       <label className={labelClassName || "block text-sm font-bold text-slate-200 mb-2 tracking-wide"}>
         {label}
       </label>
@@ -211,7 +220,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-slate-900 border border-slate-700 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] max-h-60 overflow-y-auto backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute z-[100] w-full mt-2 bg-slate-900 border border-slate-700 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.5)] max-h-48 overflow-y-auto backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100">
           {options.map((option) => (
             <button
               key={option}
@@ -236,15 +245,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({ value, onChange, option
 };
 
 
-// --- OPCIONES PARA DESPLEGABLES ---
+// --- OPCIONES PARA DESPLEGABLES (FILTRADAS Y REDUCIDAS) ---
 
 const HERRAMIENTA_TEXT_OPTIONS = [
   'Estándar (Flash/Pro)',
-  'Google Search Grounding (Datos Reales)',
-  'Google Maps Grounding (Ubicaciones)',
-  'Thinking Mode (Razonamiento Complejo)',
+  'Búsqueda en Google (Datos Actualizados)', // Translated
+  'Google Maps (Ubicaciones)', // Translated
+  'Modo Pensamiento (Razonamiento Complejo)', // Translated
   'Chatbot (Conversacional)',
-  'Respuesta Rápida (Flash Lite)'
+  'Respuesta Rápida (Flash Lite)',
+  'API en Tiempo Real (Live API)' // Translated
 ] as const;
 
 const MODO_IMAGE_OPTIONS = [
@@ -264,82 +274,89 @@ const MODO_AUDIO_OPTIONS = [
   'Generar Efecto/Música',
   'Texto a Voz (TTS)',
   'Transcripción (Speech to Text)',
-  'Live API (Conversación Real-time)'
+  'Live API (Conversación en Tiempo Real)' // Translated
 ] as const;
 
 const FORMATO_OPTIONS = [
-  'Párrafo', 'Lista con viñetas', 'Lista numerada', 'Tabla', 'JSON', 'XML', 
-  'Email', 'Guion de video', 'Artículo de blog', 'Tweet', 'Descripción de producto'
+  'Párrafo', 
+  'Lista con viñetas', 
+  'Tabla', 
+  'Email Profesional', 
+  'Guion de video', 
+  'Artículo de blog', 
+  'Post para Redes Sociales'
 ] as const;
 
 const TONO_OPTIONS = [
-  'Profesional', 'Amigable', 'Formal', 'Informal', 'Persuasivo', 'Humorístico',
-  'Empático', 'Autoritario', 'Inspirador', 'Técnico', 'Crítico', 'Neutro'
+  'Profesional', 
+  'Amigable', 
+  'Persuasivo', 
+  'Humorístico', 
+  'Empático', 
+  'Inspirador'
 ] as const;
 
 const ESTILO_ARTISTICO_OPTIONS = [
-  'Fotorrealista', 'Cinematográfico', 'Render 3D', 'Anime / Manga', 'Arte Fantástico',
-  'Arte Conceptual', 'Pintura al óleo', 'Acuarela', 'Boceto a lápiz', 'Estilo Cómic',
-  'Art Déco', 'Cyberpunk', 'Steampunk', 'Vaporwave', 'Minimalista', 'Abstracto',
-  'Impresionista', 'Surrealista'
+  'Fotorrealista', 
+  'Cinematográfico 4K', 
+  'Anime / Manga', 
+  'Cyberpunk / Futurista', 
+  'Minimalista', 
+  'Render 3D (Octane)'
 ] as const;
 
 const ILUMINACION_OPTIONS = [
-  'Luz Cinemática', 'Iluminación Volumétrica', 'Hora Dorada (Atardecer)', 'Hora Azul (Amanecer)',
-  'Luz de Estudio', 'Luz Suave', 'Luz Dura / Dramática', 'Contraluz (Backlight)',
-  'Iluminación de Neón', 'Luz Tenebrista (Clarooscuro)', 'Luz Natural', 'Iluminación ambiental',
-  'Luz de Luna', 'Bajo el agua'
+  'Luz Cinemática', 
+  'Hora Dorada (Golden Hour)', 
+  'Iluminación de Neón', 
+  'Luz de Estudio Suave', 
+  'Luz Natural'
 ] as const;
 
 const COMPOSICION_OPTIONS = [
-  'Regla de los tercios', 'Encuadre simétrico', 'Líneas guía',
-  'Primer plano (Close-up)', 'Plano medio (Medium shot)', 'Plano americano', 'Plano general (Wide shot)',
-  'Vista cenital (Top-down)', 'Vista de gusano (Worm\'s-eye)', 'Plano holandés (Dutch angle)',
-  'Encuadre dentro de un encuadre', 'Espacio negativo'
+  'Regla de los tercios', 
+  'Primer plano (Close-up)', 
+  'Plano general (Wide shot)', 
+  'Simetría Centrada', 
+  'Vista cenital (Top-down)'
 ] as const;
 
 const PARAMETROS_ADICIONALES_OPTIONS = [
-    'Relación de aspecto 16:9 (Cinemático)', 'Relación de aspecto 9:16 (Vertical)', 'Relación de aspecto 1:1 (Cuadrado)',
-    'Alta resolución (8K)', 'Ultra detallado', 'Fotorrealista',
-    'Desenfoque de fondo (Bokeh)', 'Sin texto ni marcas de agua', 'Paleta de colores vibrante',
-    'Paleta de colores pastel', 'Blanco y negro', 'Tono sepia'
+    '16:9 (Cinemático)', 
+    '9:16 (Vertical/Stories)', 
+    '1:1 (Cuadrado)', 
+    'Resolución 8K', 
+    'Estilo Fotorrealista'
 ] as const;
 
 const ACCION_PRINCIPAL_OPTIONS = [
   'Caminando', 'Corriendo', 'Volando', 'Explosión', 'Conversación', 
-  'Bailando', 'Conduciendo', 'Luchando', 'Transformación', 'Apareciendo', 
-  'Desapareciendo', 'Construyendo'
+  'Bailando', 'Conduciendo', 'Transformación', 'Mostrando producto'
 ] as const;
 
 const ESTILO_VISUAL_OPTIONS = [
-  'Cinematográfico 8K', 'Estilo Anime (Ghibli)', 'Pixel Art Animado', 'Stop Motion', 
-  'Look de Película Vintage', 'Blanco y Negro Noir', 'Documental Realista', 
-  'Colores Neón Saturados', 'Ciencia Ficción Distópica', 'Fantasía Épica', 
-  'Estilo GoPro', 'Vlog de Viajes'
+  'Cinematográfico 8K', 'Estilo Anime', 'Pixel Art', 
+  'Vintage / Retro', 'Documental Realista', 'Futurista / Sci-Fi'
 ] as const;
 
 const MOVIMIENTO_CAMARA_OPTIONS = [
-  'Plano Estático', 'Travelling (Dolly Shot)', 'Panorámica (Panning)', 'Plano Grúa (Crane Shot)', 
-  'Cámara en Mano (Handheld)', 'Plano Secuencia (Long Take)', 'Zoom In Lento', 'Zoom Out Rápido', 
-  'Plano Orbital (360°)', 'Plano Subjetivo (POV)', 'Cámara Lenta (Slow Motion)', 'Time-lapse'
+  'Plano Estático', 'Travelling (Dolly Shot)', 'Panorámica (Panning)', 
+  'Plano Grúa (Crane Shot)', 'Zoom Lento', 'Cámara en Mano (Handheld)'
 ] as const;
 
 const GENERO_AUDIO_OPTIONS = [
-  'Lofi Hip Hop', 'Rock Épico', 'Orquestal Cinematográfico', 'Ambient Electrónico', 
-  'Techno Industrial', 'Jazz Suave', 'Folk Acústico', 'Sonidos de Naturaleza', 
-  'Paisaje Sonoro Sci-Fi', 'Música 8-bit (Chiptune)', 'Pop Energético', 'Música Clásica'
+  'Lofi Hip Hop', 'Rock Épico', 'Orquestal Cinematográfico', 
+  'Ambient Electrónico', 'Jazz Suave', 'Pop Energético'
 ] as const;
 
 const ATMOSFERA_AUDIO_OPTIONS = [
-  'Relajante / Calmado', 'Tenso / Suspenso', 'Épico / Grandioso', 'Melancólico / Nostálgico', 
-  'Alegre / Optimista', 'Misterioso / Inquietante', 'Futurista / Tecnológico', 
-  'Mágico / Onírico', 'Oscuro / Siniestro', 'Cómico / Juguetón'
+  'Relajante / Calmado', 'Tenso / Suspenso', 'Épico / Grandioso', 
+  'Alegre / Optimista', 'Misterioso', 'Futurista'
 ] as const;
 
 const USO_PREVISTO_OPTIONS = [
-  'Fondo para vídeo de YouTube', 'Meditación / Relajación', 'Banda sonora de videojuego', 
-  'Efecto de sonido (SFX)', 'Intro / Outro de Podcast', 'Tono de llamada', 
-  'Música para streaming (Twitch)', 'Presentación corporativa', 'Historia de Instagram/TikTok'
+  'Fondo para vídeo', 'Meditación', 'Efecto de sonido (SFX)', 
+  'Intro de Podcast', 'Música para streaming'
 ] as const;
 
 const AI_MODELS = [
@@ -401,22 +418,22 @@ const TextFormFields: React.FC<{
                 <TextAreaField id="contexto" value={options.contexto} onChange={(e) => handleOptionChange('contexto', e.target.value)} placeholder='ej: "El cliente abrió el email inicial pero no respondió."' rows={3} isListening={isListening && voiceTargetField === 'contexto'} onVoiceClick={() => handleVoiceStart('contexto')} isSpeechSupported={isSpeechSupported}/>
             </Section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <SelectField
-                  id="formato"
+                <CustomDropdown
                   label="Formato (Opcional)"
                   value={options.formato}
-                  onChange={(e) => handleOptionChange('formato', e.target.value)}
+                  onChange={(val) => handleOptionChange('formato', val)}
                   options={FORMATO_OPTIONS}
                   placeholder="Selecciona un formato..."
+                  variant="teal"
                   labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-teal-900/40 border-teal-500 text-teal-300 shadow-teal-500/20"
                 />
-                <SelectField
-                  id="tono"
+                <CustomDropdown
                   label="Tono (Opcional)"
                   value={options.tono}
-                  onChange={(e) => handleOptionChange('tono', e.target.value)}
+                  onChange={(val) => handleOptionChange('tono', val)}
                   options={TONO_OPTIONS}
                   placeholder="Selecciona un tono..."
+                  variant="rose"
                   labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-rose-900/40 border-rose-500 text-rose-300 shadow-rose-500/20"
                 />
             </div>
@@ -435,13 +452,13 @@ const ImageFormFields: React.FC<{
     if (options.type !== 'Image') return null;
     return (
          <>
-            <SelectField
-                id="modo"
+            <CustomDropdown
                 label="Modo de Imagen / Tarea"
                 value={options.modo}
-                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                onChange={(val) => handleOptionChange('modo', val)}
                 options={MODO_IMAGE_OPTIONS}
                 placeholder="Selecciona una tarea..."
+                variant="fuchsia"
                 labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-fuchsia-900/40 border-fuchsia-500 text-fuchsia-300 shadow-fuchsia-500/20"
             />
             <Section 
@@ -453,36 +470,32 @@ const ImageFormFields: React.FC<{
                 <TextAreaField id="descripcion" value={options.descripcion} onChange={(e) => handleOptionChange('descripcion', e.target.value)} placeholder='ej: "Un astronauta montando un caballo en Marte" o "Añade gafas de sol al gato".' rows={4} isListening={isListening && voiceTargetField === 'descripcion'} onVoiceClick={() => handleVoiceStart('descripcion')} isSpeechSupported={isSpeechSupported}/>
             </Section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SelectField
-                  id="estilo"
+                <CustomDropdown
                   label="Estilo Artístico"
                   value={options.estilo}
-                  onChange={(e) => handleOptionChange('estilo', e.target.value)}
+                  onChange={(val) => handleOptionChange('estilo', val)}
                   options={ESTILO_ARTISTICO_OPTIONS}
                   placeholder="Selecciona un estilo..."
                 />
-                <SelectField
-                  id="iluminacion"
+                <CustomDropdown
                   label="Iluminación"
                   value={options.iluminacion}
-                  onChange={(e) => handleOptionChange('iluminacion', e.target.value)}
+                  onChange={(val) => handleOptionChange('iluminacion', val)}
                   options={ILUMINACION_OPTIONS}
                   placeholder="Selecciona una iluminación..."
                 />
             </div>
-             <SelectField
-                id="composicion"
+             <CustomDropdown
                 label="Composición y Encuadre"
                 value={options.composicion}
-                onChange={(e) => handleOptionChange('composicion', e.target.value)}
+                onChange={(val) => handleOptionChange('composicion', val)}
                 options={COMPOSICION_OPTIONS}
                 placeholder="Selecciona una composición..."
              />
-             <SelectField
-                id="extras"
+             <CustomDropdown
                 label="Parámetros Adicionales"
                 value={options.extras}
-                onChange={(e) => handleOptionChange('extras', e.target.value)}
+                onChange={(val) => handleOptionChange('extras', val)}
                 options={PARAMETROS_ADICIONALES_OPTIONS}
                 placeholder="Selecciona un parámetro..."
              />
@@ -501,13 +514,13 @@ const VideoFormFields: React.FC<{
     if (options.type !== 'Video') return null;
     return (
         <div className="space-y-4">
-            <SelectField
-                id="modo"
+            <CustomDropdown
                 label="Modo de Video"
                 value={options.modo}
-                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                onChange={(val) => handleOptionChange('modo', val)}
                 options={MODO_VIDEO_OPTIONS}
                 placeholder="Selecciona un modo..."
+                variant="red"
                 labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-red-900/40 border-red-500 text-red-300 shadow-red-500/20"
             />
             <Section 
@@ -519,10 +532,10 @@ const VideoFormFields: React.FC<{
                 <TextAreaField id="escena" value={options.escena} onChange={(e) => handleOptionChange('escena', e.target.value)} placeholder='ej: "Un dron vuela sobre una ciudad futurista por la noche."' rows={4} isListening={isListening && voiceTargetField === 'escena'} onVoiceClick={() => handleVoiceStart('escena')} isSpeechSupported={isSpeechSupported}/>
             </Section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 <SelectField id="accion" label="Acción Principal" value={options.accion} onChange={(e) => handleOptionChange('accion', e.target.value)} options={ACCION_PRINCIPAL_OPTIONS} placeholder="Selecciona una acción..." />
-                 <SelectField id="estiloVisual" label="Estilo Visual" value={options.estiloVisual} onChange={(e) => handleOptionChange('estiloVisual', e.target.value)} options={ESTILO_VISUAL_OPTIONS} placeholder="Selecciona un estilo..." />
+                 <CustomDropdown label="Acción Principal" value={options.accion} onChange={(val) => handleOptionChange('accion', val)} options={ACCION_PRINCIPAL_OPTIONS} placeholder="Selecciona una acción..." />
+                 <CustomDropdown label="Estilo Visual" value={options.estiloVisual} onChange={(val) => handleOptionChange('estiloVisual', val)} options={ESTILO_VISUAL_OPTIONS} placeholder="Selecciona un estilo..." />
             </div>
-            <SelectField id="camara" label="Movimiento de Cámara" value={options.camara} onChange={(e) => handleOptionChange('camara', e.target.value)} options={MOVIMIENTO_CAMARA_OPTIONS} placeholder="Selecciona un movimiento..." />
+            <CustomDropdown label="Movimiento de Cámara" value={options.camara} onChange={(val) => handleOptionChange('camara', val)} options={MOVIMIENTO_CAMARA_OPTIONS} placeholder="Selecciona un movimiento..." />
             <InputField id="extras" label="Detalles Adicionales" value={options.extras} onChange={(e) => handleOptionChange('extras', e.target.value)} placeholder="Ej: duración 15s, bucle perfecto" isListening={isListening && voiceTargetField === 'extras'} onVoiceClick={() => handleVoiceStart('extras')} isSpeechSupported={isSpeechSupported}/>
         </div>
     )
@@ -539,13 +552,13 @@ const AudioFormFields: React.FC<{
     if (options.type !== 'Audio') return null;
     return (
         <div className="space-y-4">
-             <SelectField
-                id="modo"
+             <CustomDropdown
                 label="Modo de Audio"
                 value={options.modo}
-                onChange={(e) => handleOptionChange('modo', e.target.value)}
+                onChange={(val) => handleOptionChange('modo', val)}
                 options={MODO_AUDIO_OPTIONS}
                 placeholder="Selecciona un modo..."
+                variant="yellow"
                 labelClassName="inline-block px-4 py-1.5 rounded-lg border font-bold text-sm tracking-wide shadow-[0_0_10px_rgba(0,0,0,0.3)] mb-2 bg-yellow-900/40 border-yellow-500 text-yellow-300 shadow-yellow-500/20"
             />
             <Section 
@@ -557,11 +570,11 @@ const AudioFormFields: React.FC<{
                 <TextAreaField id="tipoSonido" value={options.tipoSonido} onChange={(e) => handleOptionChange('tipoSonido', e.target.value)} placeholder='ej: "Una pista de música lofi hip hop para estudiar."' rows={3} isListening={isListening && voiceTargetField === 'tipoSonido'} onVoiceClick={() => handleVoiceStart('tipoSonido')} isSpeechSupported={isSpeechSupported} />
             </Section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SelectField id="genero" label="Género/Estilo" value={options.genero} onChange={(e) => handleOptionChange('genero', e.target.value)} options={GENERO_AUDIO_OPTIONS} placeholder="Selecciona un género..." />
-                <SelectField id="atmosfera" label="Emoción y Atmósfera" value={options.atmosfera} onChange={(e) => handleOptionChange('atmosfera', e.target.value)} options={ATMOSFERA_AUDIO_OPTIONS} placeholder="Selecciona una atmósfera..." />
+                <CustomDropdown label="Género/Estilo" value={options.genero} onChange={(val) => handleOptionChange('genero', val)} options={GENERO_AUDIO_OPTIONS} placeholder="Selecciona un género..." />
+                <CustomDropdown label="Emoción y Atmósfera" value={options.atmosfera} onChange={(val) => handleOptionChange('atmosfera', val)} options={ATMOSFERA_AUDIO_OPTIONS} placeholder="Selecciona una atmósfera..." />
             </div>
             <InputField id="instrumentos" label="Instrumentos/Voces/Efectos" value={options.instrumentos} onChange={(e) => handleOptionChange('instrumentos', e.target.value)} placeholder="Ej: piano, sintetizador, voz femenina" isListening={isListening && voiceTargetField === 'instrumentos'} onVoiceClick={() => handleVoiceStart('instrumentos')} isSpeechSupported={isSpeechSupported} />
-            <SelectField id="uso" label="Uso Previsto" value={options.uso} onChange={(e) => handleOptionChange('uso', e.target.value)} options={USO_PREVISTO_OPTIONS} placeholder="Selecciona un uso..." />
+            <CustomDropdown label="Uso Previsto" value={options.uso} onChange={(val) => handleOptionChange('uso', val)} options={USO_PREVISTO_OPTIONS} placeholder="Selecciona un uso..." />
         </div>
     );
 };
@@ -606,6 +619,7 @@ const CodeFormFields: React.FC<{
 export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onTabChange, onGenerate, options, setOptions, onClear, selectedModel, onModelChange }) => {
   const [voiceTargetField, setVoiceTargetField] = useState<string | null>(null);
   const { isListening, transcript, startListening, isSupported } = useSpeechRecognition();
+  const initialTextRef = useRef('');
   
   const handleOptionChange = (field: string, value: string) => {
     setOptions({ ...options, [field]: value });
@@ -613,6 +627,8 @@ export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onT
 
   const handleVoiceStart = (field: string) => {
     if (isListening) return;
+    // Guardamos el texto que había antes de empezar a hablar para anexar y no sobrescribir
+    initialTextRef.current = (options as any)[field] || '';
     setVoiceTargetField(field);
     startListening();
   };
@@ -620,14 +636,19 @@ export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onT
   useEffect(() => {
     if (transcript && voiceTargetField) {
         const target = voiceTargetField;
-        const currentValue = (options as any)[target] as string | undefined;
-        
-        const newValue = currentValue ? `${currentValue} ${transcript}` : transcript;
+        // Lógica de anexado: Texto inicial + espacio (si no está vacío) + lo dictado
+        const spacer = initialTextRef.current && !initialTextRef.current.endsWith(' ') ? ' ' : '';
+        const newValue = `${initialTextRef.current}${spacer}${transcript}`;
         
         handleOptionChange(target, newValue);
+    }
+  }, [transcript, voiceTargetField]); // Removed handleOptionChange and options from dependency to avoid stale closure issues or loops, relying on refs
+
+  useEffect(() => {
+    if (!isListening) {
         setVoiceTargetField(null);
     }
-  }, [transcript, voiceTargetField, handleOptionChange, options]);
+  }, [isListening]);
 
 
   const tabs: { name: TabType; icon: React.ReactElement }[] = [
@@ -649,7 +670,7 @@ export const PromptInputForm: React.FC<PromptInputFormProps> = ({ activeTab, onT
 
 
   return (
-    <div className="bg-slate-900/60 border border-cyan-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-sm">
+    <div className="relative z-20 bg-slate-900/60 border border-cyan-500/30 rounded-xl p-6 md:p-8 shadow-[0_0_30px_rgba(6,182,212,0.15)] backdrop-blur-sm">
       <div className="flex items-center justify-between mb-6">
         <button className="text-sm font-bold text-white px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 border border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)] tracking-wide">
             1. Construye tu prompt

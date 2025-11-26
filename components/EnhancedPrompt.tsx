@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppState } from '../types';
 import { Loader } from './Loader';
@@ -28,21 +29,36 @@ const MagicIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const DownloadIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 9.75v10.5m0 0L7.5 15.75M12 20.25l4.5-4.5M12 3v5.75" />
+    </svg>
+);
+
+const ShareIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+  </svg>
+);
+
 interface EnhancedPromptProps {
   prompt: string | null;
   state: AppState;
   error: string | null;
   onSave: () => void;
+  onShare: () => string;
 }
 
-export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, error, onSave }) => {
+export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, error, onSave, onShare }) => {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     if (state !== AppState.SUCCESS) {
       setCopied(false);
       setSaved(false);
+      setShared(false);
     }
   }, [state]);
 
@@ -58,6 +74,26 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
     onSave();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleShare = () => {
+      const url = onShare();
+      navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+  };
+
+  const handleDownload = () => {
+    if (!prompt) return;
+    const blob = new Blob([prompt], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'enhanced-prompt.md';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const renderContent = () => {
@@ -91,13 +127,13 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
 
   return (
     <div className="relative bg-slate-900/60 border border-lime-500/30 rounded-xl shadow-[0_0_30px_rgba(132,204,22,0.15)] backdrop-blur-sm flex flex-col h-full">
-      <div className="p-4 border-b border-lime-500/20 flex justify-between items-center">
+      <div className="p-4 border-b border-lime-500/20 flex justify-between items-center flex-wrap gap-2">
         <h2 className="text-xl font-semibold text-lime-300 drop-shadow-[0_0_8px_rgba(132,204,22,0.6)] flex items-center gap-2">
             <MagicIcon className="w-5 h-5 text-lime-300"/>
             4. Prompt Mejorado por IA
         </h2>
         {state === AppState.SUCCESS && prompt && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={handleCopy}
               className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
@@ -105,6 +141,22 @@ export const EnhancedPrompt: React.FC<EnhancedPromptProps> = ({ prompt, state, e
             >
               {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
               <span>{copied ? 'Copiado' : 'Copiar'}</span>
+            </button>
+            <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
+                title="Descargar .md"
+            >
+                <DownloadIcon className="w-4 h-4" />
+                <span>Descargar</span>
+            </button>
+            <button
+                onClick={handleShare}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
+                title="Copiar Enlace para Compartir"
+            >
+                {shared ? <CheckIcon className="w-4 h-4 text-cyan-400" /> : <ShareIcon className="w-4 h-4" />}
+                <span>{shared ? 'Enlace Copiado' : 'Compartir'}</span>
             </button>
             <button
               onClick={handleSave}

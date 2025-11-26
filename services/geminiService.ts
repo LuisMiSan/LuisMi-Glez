@@ -161,7 +161,9 @@ export async function constructPrompt(options: PromptOptions, model: string): Pr
           *   **Contexto Ampliado:** Proporciona un trasfondo rico.
           *   **Especificaciones Técnicas:** Incorpora parámetros relevantes para "${model}".
       3.  **Síntesis Cohesiva:** Tu tarea más importante es sintetizar toda la información en un único prompt coherente.
-      4.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas explicaciones ni notas. Solo el prompt final.
+      4.  **FORMATO OBLIGATORIO:** Tu respuesta debe estar siempre formateada en **Markdown**. Usa encabezados (###), negritas, listas con viñetas y bloques de código donde corresponda para maximizar la legibilidad.
+      5.  **IDIOMA:** El prompt resultante debe estar redactado en **ESPAÑOL**, salvo que el usuario pida explícitamente código o un prompt en inglés.
+      6.  **Salida Directa y Pura:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt final sintetizado. NO incluyas explicaciones ni notas. Solo el prompt final.
     `;
 
     const response = await ai.models.generateContent({
@@ -202,7 +204,9 @@ export async function enhancePrompt(existingPrompt: string, model: string): Prom
       1.  **Añade Complejidad y Matices:** Introduce capas adicionales de detalle.
       2.  **Optimización para ${model}:** Asegúrate de que el lenguaje y los parámetros sean los ideales para este modelo específico.
       3.  **Incrementa la Especificidad Técnica:** Añade parámetros aún más detallados.
-      4.  **Salida Directa:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt mejorado. Sin preámbulos. Solo el prompt.
+      4.  **FORMATO OBLIGATORIO:** Tu respuesta debe estar siempre formateada en **Markdown**. Usa encabezados (###), negritas, listas con viñetas y bloques de código para estructurar claramente las secciones del prompt.
+      5.  **IDIOMA:** El prompt resultante debe estar redactado en **ESPAÑOL**, salvo que el usuario pida explícitamente código o un prompt en inglés.
+      6.  **Salida Directa:** Tu respuesta debe ser ÚNICA Y EXCLUSIVAMENTE el texto del prompt mejorado. Sin preámbulos. Solo el prompt.
     `;
 
     const response = await ai.models.generateContent({

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { AppState } from '../types';
 import { Loader } from './Loader';
@@ -27,22 +28,37 @@ const SparkleIcon: React.FC<{ className?: string }> = ({ className }) => (
     </svg>
 );
 
+const DownloadIcon: React.FC<{ className?: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 9.75v10.5m0 0L7.5 15.75M12 20.25l4.5-4.5M12 3v5.75" />
+    </svg>
+);
+
+const ShareIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+  </svg>
+);
+
 interface PromptOutputProps {
   prompt: string | null;
   state: AppState;
   error: string | null;
   onSave: () => void;
   onEnhance: () => void;
+  onShare: () => string;
 }
 
-export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error, onSave, onEnhance }) => {
+export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error, onSave, onEnhance, onShare }) => {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [shared, setShared] = useState(false);
 
   useEffect(() => {
     if (state !== AppState.SUCCESS) {
       setCopied(false);
       setSaved(false);
+      setShared(false);
     }
   }, [state]);
 
@@ -58,6 +74,26 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
     onSave();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleShare = () => {
+      const url = onShare();
+      navigator.clipboard.writeText(url);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+  };
+
+  const handleDownload = () => {
+      if (!prompt) return;
+      const blob = new Blob([prompt], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'perfect-prompt.md';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
   };
 
   const renderContent = () => {
@@ -100,7 +136,7 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
       <div className="p-4 border-b border-fuchsia-500/20 flex justify-between items-center flex-wrap gap-2">
         <h2 className="text-xl font-semibold text-fuchsia-300 drop-shadow-[0_0_8px_rgba(217,70,239,0.6)]">2. Prompt Generado</h2>
         {state === AppState.SUCCESS && prompt && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
              <button
               onClick={onEnhance}
               className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-md text-sm transition-all shadow-[0_0_10px_rgba(147,51,234,0.5)] border border-purple-400/50"
@@ -116,6 +152,22 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
             >
               {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
               <span>{copied ? 'Copiado' : 'Copiar'}</span>
+            </button>
+            <button
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
+                title="Descargar .md"
+            >
+                <DownloadIcon className="w-4 h-4" />
+                <span>Descargar</span>
+            </button>
+            <button
+                onClick={handleShare}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-md text-sm transition-colors border border-slate-600"
+                title="Copiar Enlace para Compartir"
+            >
+                {shared ? <CheckIcon className="w-4 h-4 text-cyan-400" /> : <ShareIcon className="w-4 h-4" />}
+                <span>{shared ? 'Enlace Copiado' : 'Compartir'}</span>
             </button>
             <button
               onClick={handleSave}
