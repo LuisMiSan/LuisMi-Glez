@@ -92,7 +92,7 @@ export const HistoryPanel: React.FC<HistoryPanelProps> = ({ history, onSelect, o
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">3. Tus Prompts Guardados</h2>
+        <h2 className="text-xl font-semibold text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">3. Librería de Prompts</h2>
         {history.length > 0 && (
             <button
                 onClick={onClear}

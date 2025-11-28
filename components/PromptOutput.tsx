@@ -89,7 +89,9 @@ export const PromptOutput: React.FC<PromptOutputProps> = ({ prompt, state, error
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = 'perfect-prompt.md';
+      // Add timestamp to filename to ensure uniqueness
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      link.download = `perfect-prompt-${timestamp}.md`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
